@@ -32,6 +32,10 @@ SCREEN_NINTH = int(SCREEN_RECT.w/9)
 BUTTON_DIM = (350, 150) # change to be relative to screen dims
 MENU_BUTTON_FONT = pygame.font.Font(None, 50)
 
+# Game content
+LETTERS = ["A","B","C","D","E","F","G","H","I","J",
+           "K","L","M","N","O","P","Q","R","S","T",
+           "U","V","W","X","Y","Z","Æ","Ø","Å"]
 
 # Text rendering
 def print_text(text, color, text_font, surface, pos):
@@ -40,6 +44,7 @@ def print_text(text, color, text_font, surface, pos):
     surface.blit(text, text_pos)
 
 NORMAL_FONT = pygame.font.Font(None, 50)
+TARGET_FONT = pygame.font.Font(None, 180)
 
 # Images
 def load_image(name):

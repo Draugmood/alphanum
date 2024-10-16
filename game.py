@@ -21,6 +21,8 @@ class GameType(Enum):
 class Game:
     def __init__(self):
         self.clock = cf.CLOCK
+        self.dt = 0
+        self.playtime = 0
         self.current_state = GameState.GAME_SELECT
         self.menu_chooser = 0
         self.game_type = None
@@ -29,6 +31,9 @@ class Game:
         self.background = pygame.Surface(cf.SCREEN.get_size()).convert()
         self.background.fill(cf.BLACK)
         self.group = pygame.sprite.Group()
+        self.round_started = False
+        self.target = None
+
         self.game_select_buttons = [
             Button("BOKSTAVER", 300, self.set_game_type, args=(GameType.LETTERS,)),
             Button("TALL", 500, self.set_game_type, args=(GameType.NUMBERS,))
@@ -59,7 +64,7 @@ class Game:
 
     def run(self):
         while self.current_state != GameState.EXIT:
-            self.clock.tick(60)
+            self.dt = self.clock.tick(60)
             self.handle_events()
             self.update()
             self.draw()
@@ -69,7 +74,12 @@ class Game:
     def update(self):
         cf.SCREEN.blit(self.background, (0, 0))
         if self.current_state == GameState.PLAYING:
+            self.playtime += self.dt
+            if self.playtime > 4000:
+                self.round_started = True
+                self.play_round()
             handle_particles(self.particles)
+
         else: # updates for other game states
             pass
 
@@ -79,6 +89,30 @@ class Game:
             for button in buttons:
                 button.draw()
             self.hovered_button().hover()
+
+        if 4000 > self.playtime > 1000:
+            cf.print_text(str(4-(self.playtime // 1000)),
+                          cf.WHITE,
+                          cf.NORMAL_FONT,
+                          cf.SCREEN,
+                          cf.SCREEN_RECT.center)
+
+        if self.round_started:
+            cf.print_text("TRYKK PÅ BOKSTAVEN...",
+                          cf.WHITE,
+                          cf.NORMAL_FONT,
+                          cf.SCREEN,
+                          (cf.SCREEN_RECT.centerx,
+                           cf.SCREEN_RECT.centery-100))
+
+        if self.target and self.playtime > 6000:
+            cf.print_text(self.target,
+                          cf.WHITE,
+                          cf.TARGET_FONT,
+                          cf.SCREEN,
+                          (cf.SCREEN_RECT.centerx,
+                           cf.SCREEN_RECT.centery+100))
+
         self.group.draw(cf.SCREEN)
         pygame.display.flip()
 
@@ -225,6 +259,13 @@ class Game:
                    or event.key == pygame.K_PAGEUP
                    or event.key == pygame.K_PAGEDOWN):
                    spawn_colors(20, self.particles, 9, cf.COL_9)
+
+    def play_round(self):
+        if not self.target:
+            if self.game_type == GameType.LETTERS:
+                self.target = random.choice(cf.LETTERS)
+            if self.game_type == GameType.NUMBERS:
+                self.target = random.randint(0,9)
 
     def get_current_menu_buttons(self):
         if self.current_state == GameState.GAME_SELECT:
