@@ -6,12 +6,14 @@ import pygame
 import config as cf
 
 # exports
-def handler(all_particles):
-    all_particles[:] = [
-        update_particle(particle) for particle in all_particles
+def update(particle_list):
+    particle_list[:] = [
+        _update(particle) for particle in particle_list
         if (particle[2] > 0)
     ]
-    for particle in all_particles:
+
+def draw(particle_list):
+    for particle in particle_list:
         pygame.draw.circle(
             cf.SCREEN,
             particle[3],
@@ -21,17 +23,17 @@ def handler(all_particles):
 
 def spawn_many_colors(part_per_color, part_list):
     for color in cf.COLORLIST:
-        spawn_colors_center(part_per_color, part_list, color)
+        _spawn_colors_center(part_per_color, part_list, color)
 
 
 # local
-def update_particle(particle):
+def _update(particle):
     particle[0][0] += particle[1][0]
     particle[0][1] += particle[1][1]
     particle[2] -= 0.1
     return particle
 
-def spawn_colors_center(num_part, part_list, color):
+def _spawn_colors_center(num_part, part_list, color):
     for _ in range(num_part):
         # Initial position at the center of the screen
         x_pos = cf.SCREEN_RECT.centerx

@@ -81,7 +81,7 @@ class Game:
             if self.playtime > 4000:
                 self.round_started = True
                 self.play_round()
-            particle.handler(self.particles)
+            particle.update(self.particles)
 
         else: # updates for other game states
             pass
@@ -121,6 +121,7 @@ class Game:
                           (cf.SCREEN_RECT.centerx,
                            cf.SCREEN_RECT.centery+100))
 
+        particle.draw(self.particles)
         self.group.draw(cf.SCREEN)
         pygame.display.flip()
 
