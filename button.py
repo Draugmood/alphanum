@@ -3,12 +3,6 @@ import config as cf
 
 from enum import Enum, auto
 
-class ButtonType(Enum):
-    NUMBER_GAME = auto()
-    LETTER_GAME = auto()
-    VISUAL_MODE = auto()
-    HIDDEN_MODE = auto()
-    BACK = auto()
 
 class Button:
     """Button object for navigating the menus"""

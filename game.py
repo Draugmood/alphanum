@@ -1,9 +1,11 @@
-import sys
 import random
-import pygame
-import config as cf
+import sys
 
-from button import Button, ButtonType
+import pygame
+
+import config as cf
+import particle
+from button import Button
 from enum import Enum, auto
 
 class GameState(Enum):
@@ -33,6 +35,7 @@ class Game:
         self.group = pygame.sprite.Group()
         self.round_started = False
         self.target = None
+        self.correct_key = None
 
         self.game_select_buttons = [
             Button("BOKSTAVER", 300, self.set_game_type, args=(GameType.LETTERS,)),
@@ -78,7 +81,7 @@ class Game:
             if self.playtime > 4000:
                 self.round_started = True
                 self.play_round()
-            handle_particles(self.particles)
+            particle.handler(self.particles)
 
         else: # updates for other game states
             pass
@@ -98,7 +101,12 @@ class Game:
                           cf.SCREEN_RECT.center)
 
         if self.round_started:
-            cf.print_text("TRYKK PÅ BOKSTAVEN...",
+            instruction_text = "TRYKK PÅ"
+            if self.game_type == GameType.LETTERS:
+                instruction_text += " BOKSTAVEN..."
+            if self.game_type == GameType.NUMBERS:
+                instruction_text += " TALLET..."
+            cf.print_text(instruction_text,
                           cf.WHITE,
                           cf.NORMAL_FONT,
                           cf.SCREEN,
@@ -106,7 +114,7 @@ class Game:
                            cf.SCREEN_RECT.centery-100))
 
         if self.target and self.playtime > 6000:
-            cf.print_text(self.target,
+            cf.print_text(str(self.target),
                           cf.WHITE,
                           cf.TARGET_FONT,
                           cf.SCREEN,
@@ -148,124 +156,26 @@ class Game:
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if (event.key == pygame.K_ESCAPE):
+                if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-                if (event.key == pygame.K_LSHIFT
-                   or event.key == pygame.K_LESS
-                   or event.key == pygame.K_LCTRL
-                   or event.key == pygame.K_CAPSLOCK
-                   or event.key == pygame.K_a
-                   or event.key == pygame.K_TAB
-                   or event.key == pygame.K_q
-                   or event.key == 124
-                   or event.key == pygame.K_1
-                   or event.key == pygame.K_F1):
-                    spawn_colors(20, self.particles, 1, cf.COL_1)
-                if (event.key == pygame.K_z
-                   or event.key == pygame.K_x
-                   or event.key == pygame.K_LMETA
-                   or event.key == pygame.K_LALT
-                   or event.key == pygame.K_s
-                   or event.key == pygame.K_d
-                   or event.key == pygame.K_w
-                   or event.key == pygame.K_e
-                   or event.key == pygame.K_2
-                   or event.key == pygame.K_3
-                   or event.key == pygame.K_F2
-                   or event.key == pygame.K_F3):
-                    spawn_colors(20, self.particles, 2, cf.COL_2)
-                if (event.key == pygame.K_c
-                   or event.key == pygame.K_v
-                   or event.key == pygame.K_f
-                   or event.key == pygame.K_g
-                   or event.key == pygame.K_r
-                   or event.key == pygame.K_t
-                   or event.key == pygame.K_4
-                   or event.key == pygame.K_5
-                   or event.key == pygame.K_F4
-                   or event.key == pygame.K_F5
-                   or event.key == pygame.K_F6):
-                   spawn_colors(20, self.particles, 3, cf.COL_3)
-                if (event.key == pygame.K_b
-                   or event.key == pygame.K_n
-                   or event.key == pygame.K_h
-                   or event.key == pygame.K_j
-                   or event.key == pygame.K_y
-                   or event.key == pygame.K_u
-                   or event.key == pygame.K_6
-                   or event.key == pygame.K_7
-                   or event.key == pygame.K_F7
-                   or event.key == pygame.K_F8):
-                   spawn_colors(20, self.particles, 4, cf.COL_4)
-                if (event.key == pygame.K_m
-                   or event.key == pygame.K_COMMA
-                   or event.key == pygame.K_RALT
-                   or event.key == pygame.K_k
-                   or event.key == pygame.K_l
-                   or event.key == pygame.K_i
-                   or event.key == pygame.K_o
-                   or event.key == pygame.K_8
-                   or event.key == pygame.K_9
-                   or event.key == pygame.K_F9
-                   or event.key == pygame.K_F10):
-                   spawn_colors(20, self.particles, 5, cf.COL_5)
-                if (event.key == pygame.K_PERIOD
-                   or event.key == pygame.K_MINUS
-                   or event.key == pygame.K_MENU
-                   or event.key == pygame.K_RCTRL
-                   or event.key == 248
-                   or event.key == 230
-                   or event.key == pygame.K_p
-                   or event.key == 229
-                   or event.key == pygame.K_0
-                   or event.key == pygame.K_PLUS
-                   or event.key == pygame.K_F11
-                   or event.key == pygame.K_F12):
-                   spawn_colors(20, self.particles, 6, cf.COL_6)
-                if (event.key == pygame.K_RSHIFT
-                   or event.key == pygame.K_UP
-                   or event.key == pygame.K_LEFT
-                   or event.key == pygame.K_DOWN
-                   or event.key == pygame.K_QUOTE
-                   or event.key == pygame.K_RETURN
-                   or event.key == 1073741824
-                   or event.key == pygame.K_BACKSLASH
-                   or event.key == pygame.K_BACKSPACE
-                   or event.key == pygame.K_INSERT
-                   or event.key == pygame.K_DELETE):
-                   spawn_colors(20, self.particles, 7, cf.COL_7)
-                if (event.key == pygame.K_KP1
-                   or event.key == pygame.K_KP2
-                   or event.key == pygame.K_RIGHT
-                   or event.key == pygame.K_KP0
-                   or event.key == pygame.K_KP4
-                   or event.key == pygame.K_KP5
-                   or event.key == pygame.K_KP7
-                   or event.key == pygame.K_KP8
-                   or event.key == pygame.K_NUMLOCK
-                   or event.key == pygame.K_KP_DIVIDE
-                   or event.key == pygame.K_HOME
-                   or event.key == pygame.K_END):
-                   spawn_colors(20, self.particles, 8, cf.COL_8)
-                if (event.key == pygame.K_KP3
-                   or event.key == pygame.K_KP_ENTER
-                   or event.key == pygame.K_KP_PERIOD
-                   or event.key == pygame.K_KP6
-                   or event.key == pygame.K_KP_PLUS
-                   or event.key == pygame.K_KP9
-                   or event.key == pygame.K_KP_MULTIPLY
-                   or event.key == pygame.K_KP_MINUS
-                   or event.key == pygame.K_PAGEUP
-                   or event.key == pygame.K_PAGEDOWN):
-                   spawn_colors(20, self.particles, 9, cf.COL_9)
+                if event.key == self.correct_key:
+                    particle.spawn_many_colors(20, self.particles)
+                if event.key == pygame.K_SPACE:
+                    particle.spawn_many_colors(20, self.particles)
+                else:
+                    pass # handle mistake case
 
     def play_round(self):
         if not self.target:
             if self.game_type == GameType.LETTERS:
-                self.target = random.choice(cf.LETTERS)
+                self.target, self.correct_key = (
+                    random.choice(list(cf.LETTERS.items()))
+                )
             if self.game_type == GameType.NUMBERS:
-                self.target = random.randint(0,9)
+                self.target, self.correct_key = (
+                    random.choice(list(cf.NUMBERS.items()))
+                )
 
     def get_current_menu_buttons(self):
         if self.current_state == GameState.GAME_SELECT:
@@ -277,33 +187,6 @@ class Game:
     def hovered_button(self):
         active_buttons = self.get_current_menu_buttons()
         return active_buttons[self.menu_chooser%len(active_buttons)]
-
-
-def handle_particles(all_ptcl):
-    for particle in all_ptcl:
-        particle[0][0] += particle[1][0]
-        particle[0][1] += particle[1][1]
-        particle[2] -= 0.1
-        pygame.draw.circle(cf.SCREEN,
-                       particle[3],
-                       (int(particle[0][0]), int(particle[0][1])),
-                       int(particle[2]))
-        if particle[2] <= 0:
-            all_ptcl.remove(particle)
-
-
-def spawn_colors(num_part, part_list, pos, col):
-    for _ in range(num_part):
-        x_pos = cf.SCREEN_NINTH*pos-(cf.SCREEN_NINTH/2) + random.randint(-40, 40)
-        y_pos = cf.SCREEN_RECT.h-15
-        x_vel = random.randint(0, 20)/10 - 1
-        y_vel = -random.randint(2, 7)
-        size = random.randint(4, 20)
-
-        part_list.append([[x_pos, y_pos],
-                          [x_vel, y_vel],
-                          size,
-                          col])
 
 
 if __name__ == "__main__":
