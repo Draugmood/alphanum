@@ -8,16 +8,24 @@ import particle
 from button import Button
 from enum import Enum, auto
 
+
 class GameState(Enum):
     GAME_SELECT = auto()
     VISIBILITY_SELECT = auto()
     PLAYING = auto()
     EXIT = auto()
 
+
 class GameType(Enum):
     NUMBERS = auto()
     LETTERS = auto()
 
+
+class RoundState(Enum):
+    STANDBY = auto()
+    STARTED = auto()
+    FAILSTATE = auto()
+    WINSTATE = auto()
 
 
 class Game:
@@ -33,12 +41,13 @@ class Game:
         self.background = pygame.Surface(cf.SCREEN.get_size()).convert()
         self.background.fill(cf.BLACK)
         self.group = pygame.sprite.Group()
-        self.round_started = False
+        self.round_state = RoundState.STANDBY
         self.target = None
         self.correct_key = None
 
         self.game_select_buttons = [
-            Button("BOKSTAVER", 300, self.set_game_type, args=(GameType.LETTERS,)),
+            Button("BOKSTAVER", 300, self.set_game_type,
+                   args=(GameType.LETTERS,)),
             Button("TALL", 500, self.set_game_type, args=(GameType.NUMBERS,))
         ]
 
@@ -47,7 +56,6 @@ class Game:
             Button("SKJULT", 400, self.set_visibility, args=(0,)),
             Button("TILBAKE", 600, self.reset_menu, args=())
         ]
-        
 
     def set_game_type(self, game_type):
         self.game_type = game_type
@@ -78,29 +86,41 @@ class Game:
         cf.SCREEN.blit(self.background, (0, 0))
         if self.current_state == GameState.PLAYING:
             self.playtime += self.dt
-            if self.playtime > 4000:
-                self.round_started = True
-                self.play_round()
+            if self.playtime > 4000 and self.round_state is RoundState.STANDBY:
+                self.round_state = RoundState.STARTED
+                self.start_round()
+            if (self.playtime > 2000
+                and self.round_state is RoundState.WINSTATE
+                    or self.round_state is RoundState.FAILSTATE):
+                self.reset_round()
             particle.update(self.particles)
 
-        else: # updates for other game states
+        else:  # updates for other game states
             pass
 
     def draw(self):
+
+        # debug text
+        cf.print_text(str(self.round_state), cf.WHITE,
+                      cf.NORMAL_FONT, cf.SCREEN,
+                      cf.SCREEN_RECT.topleft,
+                      align="topleft")
+
         if not self.current_state == GameState.PLAYING:
             buttons = self.get_current_menu_buttons()
             for button in buttons:
                 button.draw()
             self.hovered_button().hover()
 
-        if 4000 > self.playtime > 1000:
+        if (self.round_state is RoundState.STANDBY and
+                (4000 > self.playtime > 1000)):
             cf.print_text(str(4-(self.playtime // 1000)),
                           cf.WHITE,
                           cf.NORMAL_FONT,
                           cf.SCREEN,
                           cf.SCREEN_RECT.center)
 
-        if self.round_started:
+        if self.round_state == RoundState.STARTED:
             instruction_text = "TRYKK PÅ"
             if self.game_type == GameType.LETTERS:
                 instruction_text += " BOKSTAVEN..."
@@ -160,23 +180,38 @@ class Game:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-                if event.key == self.correct_key:
-                    particle.spawn_many_colors(20, self.particles)
-                if event.key == pygame.K_SPACE:
-                    particle.spawn_many_colors(20, self.particles)
-                else:
-                    pass # handle mistake case
+                if self.round_state == RoundState.STARTED:
+                    if event.key == self.correct_key:
+                        self.round_state = RoundState.WINSTATE
+                        particle.spawn_many_colors(20, self.particles)
+                        self.playtime = 0
+                    elif event.key == pygame.K_SPACE:
+                        particle.spawn_many_colors(20, self.particles)
+                    else:
+                        self.round_state = RoundState.FAILSTATE
+                        self.playtime = 0
 
-    def play_round(self):
+    def start_round(self):
         if not self.target:
             if self.game_type == GameType.LETTERS:
                 self.target, self.correct_key = (
                     random.choice(list(cf.LETTERS.items()))
                 )
+                choice_list = [
+                    (self.target, self.correct_key),
+                    (self.target, self.correct_key),
+                    ("Y y", pygame.K_y),
+                ]
+                self.target, self.correct_key = random.choice(choice_list)
             if self.game_type == GameType.NUMBERS:
                 self.target, self.correct_key = (
                     random.choice(list(cf.NUMBERS.items()))
                 )
+
+    def reset_round(self):
+        self.round_state = RoundState.STANDBY
+        self.playtime = 0
+        self.target = None
 
     def get_current_menu_buttons(self):
         if self.current_state == GameState.GAME_SELECT:
@@ -184,12 +219,17 @@ class Game:
         if self.current_state == GameState.VISIBILITY_SELECT:
             return self.visibility_select_buttons
         return []
-    
+
     def hovered_button(self):
         active_buttons = self.get_current_menu_buttons()
-        return active_buttons[self.menu_chooser%len(active_buttons)]
+        return active_buttons[self.menu_chooser % len(active_buttons)]
 
 
 if __name__ == "__main__":
+    # skips menu for testing game loop
+    # game_type and visibility must be set here
     game = Game()
+    game.game_type = GameType.LETTERS
+    game.visibility = 1
+    game.current_state = GameState.PLAYING
     game.run()
