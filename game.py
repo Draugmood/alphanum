@@ -197,16 +197,18 @@ class Game:
                 self.target, self.correct_key = (
                     random.choice(list(cf.LETTERS.items()))
                 )
-                choice_list = [
-                    (self.target, self.correct_key),
-                    (self.target, self.correct_key),
-                    ("Y y", pygame.K_y),
-                ]
-                self.target, self.correct_key = random.choice(choice_list)
-            if self.game_type == GameType.NUMBERS:
-                self.target, self.correct_key = (
-                    random.choice(list(cf.NUMBERS.items()))
-                )
+
+                # FOR Å FÅ FLERE Y'er TIL YLVA
+            #     choice_list = [
+            #         (self.target, self.correct_key),
+            #         (self.target, self.correct_key),
+            #         ("Y y", pygame.K_y),
+            #     ]
+            #     self.target, self.correct_key = random.choice(choice_list)
+            # if self.game_type == GameType.NUMBERS:
+            #     self.target, self.correct_key = (
+            #         random.choice(list(cf.NUMBERS.items()))
+            #     )
 
     def reset_round(self):
         self.round_state = RoundState.STANDBY
